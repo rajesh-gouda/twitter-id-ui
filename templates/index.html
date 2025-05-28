@@ -1,33 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Submit Twitter ID + Agent Name</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f8fb;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    form {
+      background-color: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
     .input-row {
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
+      gap: 8px;
     }
-    .input-row input {
-      margin-right: 8px;
+
+    input,
+    select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      flex: 1;
     }
-    .input-row button {
-      margin-left: 4px;
+
+    select {
+      min-width: 180px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .remove-button {
+      background-color: #e74c3c;
+    }
+
+    .remove-button:hover {
+      background-color: #c0392b;
+    }
+
+    #submit-button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #2ecc71;
+    }
+
+    #submit-button:hover {
+      background-color: #27ae60;
     }
   </style>
 </head>
+
 <body>
-  <h2>Submit Twitter ID + Agent Name</h2>
   <form id="data-form" method="POST" action="/submit">
+    {% if message %}
+    <div style="
+        margin-bottom: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        color: {{ 'rgba(21, 87, 36, 0.9)' if status == 'success' else 'rgba(97, 26, 21, 0.9)' }};
+        background-color: {{ '#d4edda' if status == 'success' else '#f8d7da' }};
+        border: 1px solid {{ '#c3e6cb' if status == 'success' else '#f5c6cb' }};
+      ">
+      {{ message }}
+    </div>
+    {% endif %}
+    <h2>Agent Assignment Form</h2>
     <div id="inputs">
       <div class="input-row">
         <input type="text" name="twitter_id" placeholder="Twitter ID" required />
-        <input type="text" name="agent_name" placeholder="Agent Name" required />
+        <select name="agent_name" required>
+          <option value="">Select Agent</option>
+          <option value="Investor">Investor</option>
+          <option value="Actor">Actor</option>
+          <option value="Actress">Actress</option>
+          <option value="Director">Director</option>
+          <option value="Script_writter">Script_writter</option>
+          <option value="Producer">Producer</option>
+          <option value="Technical_supporter_specialist">Technical_supporter_specialist</option>
+          <option value="Marketing_and_promotion_specialist">Marketing_and_promotion_specialist</option>
+        </select>
         <button type="button" onclick="addInput()">+</button>
       </div>
     </div>
-    <button type="submit">Submit</button>
+    <button id="submit-button" type="submit">Submit</button>
   </form>
 
   <script>
@@ -37,8 +127,18 @@
       div.className = "input-row";
       div.innerHTML = `
         <input type="text" name="twitter_id" placeholder="Twitter ID" required />
-        <input type="text" name="agent_name" placeholder="Agent Name" required />
-        <button type="button" onclick="removeInput(this)">−</button>
+        <select name="agent_name" required>
+          <option value="">Select Agent</option>
+          <option value="Investor">Investor</option>
+          <option value="Actor">Actor</option>
+          <option value="Actress">Actress</option>
+          <option value="Director">Director</option>
+          <option value="Script_writter">Script_writter</option>
+          <option value="Producer">Producer</option>
+          <option value="Technical_supporter_specialist">Technical_supporter_specialist</option>
+          <option value="Marketing_and_promotion_specialist">Marketing_and_promotion_specialist</option>
+        </select>
+        <button type="button" class="remove-button" onclick="removeInput(this)">−</button>
       `;
       container.appendChild(div);
     }
@@ -48,4 +148,5 @@
     }
   </script>
 </body>
+
 </html>
