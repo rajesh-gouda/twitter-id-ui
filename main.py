@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from starlette.responses import RedirectResponse
 from urllib.parse import urlencode
+from enum import Enum
 from pymongo import MongoClient
 from dataclasses import dataclass
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,6 +14,8 @@ from dotenv import load_dotenv
 import os
 import logging
 import sys
+import uvicorn
+from datetime import datetime
 
 
 def setup_logger(name="twitterui") -> logging.Logger:
@@ -41,6 +44,17 @@ templates = Jinja2Templates(directory="templates")
 logger = setup_logger()
 
 logger.info("Server started")
+
+
+class AgentType(str, Enum):
+    investor = "investor"
+    actor = "actor"
+    actress = "actress"
+    director = "director"
+    script_writter = "script_writter"
+    producer = "producer"
+    technical_supporter_specialist = "technical_supporter_specialist"
+    marketing_and_promotion_specialist = "marketing_and_promotion_specialist"
 
 
 @dataclass
@@ -75,7 +89,12 @@ collection = db["tweets"]
 async def add_records(twit_id: str, agent_type: str):
     try:
         # Insert a sample document (creates DB and collection if not exist)
-        doc = {"Twit-id": twit_id, "Needed_agent_type": agent_type}
+        doc = {
+            "tweetId": twit_id,
+            "agentType": agent_type,
+            "createdAt": datetime.now(),
+            "status": "pending",
+        }
         result = await collection.insert_one(doc)
         logger.info(f"Inserted with _id:{result.inserted_id}")
     except Exception as e:
@@ -89,7 +108,7 @@ async def index(request: Request, status: str = None, message: str = None):
     )
 
 
-@app.post("/submit", response_class=JSONResponse)
+@app.post("/submit")
 async def submit(
     request: Request,
     twitter_id: List[str] = Form(...),
@@ -103,6 +122,15 @@ async def submit(
                 status_code=303,
             )
 
+        # Validate each agent_name using the Enum
+        for aname in agent_name:
+            if aname not in AgentType._value2member_map_:
+                msg = f"Invalid agent type: {aname}"
+                return RedirectResponse(
+                    url=f"/?{urlencode({'status': 'error', 'message': msg})}",
+                    status_code=303,
+                )
+
         data = [
             {"twitter_id": tid, "agent_name": aname}
             for tid, aname in zip(twitter_id, agent_name)
@@ -111,7 +139,7 @@ async def submit(
             logger.info(f"Processing item: {item}")
             await add_records(item["twitter_id"], item["agent_name"])
             logger.info(
-                f"Twitter ID: {item['twitter_id']}, Agent Name: {item['agent_name']}"
+                f"Inserted Twitter ID: {item['twitter_id']}, Agent Name: {item['agent_name']}"
             )
         return RedirectResponse(
             url=f"/?{urlencode({'status': 'success', 'message': 'Data submitted successfully!'})}",
@@ -123,3 +151,7 @@ async def submit(
             url=f"/?{urlencode({'status': 'error', 'message': 'Internal server error.'})}",
             status_code=303,
         )
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5006, log_level="info")
