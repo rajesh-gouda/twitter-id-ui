@@ -55,6 +55,7 @@ class AgentType(str, Enum):
     producer = "producer"
     technical_supporter_specialist = "technical_supporter_specialist"
     marketing_and_promotion_specialist = "marketing_and_promotion_specialist"
+    casting_assistant = "casting_assistant"
 
 
 @dataclass
@@ -94,6 +95,7 @@ async def add_records(twit_id: str, agent_type: str):
             "agentType": agent_type,
             "createdAt": datetime.now(),
             "status": "pending",
+            "updatedAt": datetime.now(),
         }
         result = await collection.insert_one(doc)
         logger.info(f"Inserted with _id:{result.inserted_id}")
@@ -103,8 +105,21 @@ async def add_records(twit_id: str, agent_type: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, status: str = None, message: str = None):
+    records = await collection.find().sort("createdAt", -1).to_list(length=100)
+    logger.info(f"Fetched {len(records)} records from the database.")
     return templates.TemplateResponse(
-        "index.html", {"request": request, "status": status, "message": message}
+        "index.html",
+        {"request": request, "status": status, "message": message, "records": records},
+    )
+
+
+@app.get("/all_records", response_class=HTMLResponse)
+async def index(request: Request):
+    records = await collection.find().sort("createdAt", -1).to_list()
+    logger.info(f"Fetched {len(records)} records from the database.")
+    return templates.TemplateResponse(
+        "allrecords.html",
+        {"request": request, "records": records},
     )
 
 
