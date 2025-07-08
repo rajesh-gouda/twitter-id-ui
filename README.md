@@ -28,16 +28,20 @@ cd twitter-id-ui
 ```
 
 ### 2. Create a .env File
+```bash
 MONGO_HOST=your_mongodb_host
 MONGO_PASSWORD=your_mongo_password
+```
 
 ### 3. Build and Run with Docker
 #### Build the Docker image
+```bash
 docker build -t twitter_ui:latest .
-
+```
 #### Run the container
+```bash
 docker run -d --name twitter_ui -p 5006:5006 twitter_ui:latest
-
+```
 
 
 
