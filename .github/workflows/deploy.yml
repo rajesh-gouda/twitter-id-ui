@@ -1,0 +1,43 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # change this if your branch is named differently
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH into EC2 and deploy
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            # Remove old app folder if exists
+            rm -rf twitter-ui || true
+
+            # Clone fresh code
+            git clone https://github.com/${{ github.repository }} twitter-ui
+            cd twitter-ui
+
+            # Build Docker image
+            docker build -t twitter-ui .
+
+            # Stop and remove any old container
+            docker stop fastapi-container || true
+            docker rm fastapi-container || true
+
+            # Run new container
+            docker run -d --name fastapi-container -p 5006:5006 twitter-ui
+          EOF
